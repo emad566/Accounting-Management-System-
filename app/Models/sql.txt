@@ -1,0 +1,56 @@
+SELECT
+  `vp`.`id` AS `id`,
+  `vp`.`invoice_id` AS `invoice_id`,
+  `vp`.`product_id` AS `product_id`,
+  `vp`.`runID` AS `runID`,
+  `vp`.`invoice_public_price` AS `invoice_public_price`,
+  `vp`.`discount` AS `discount`,
+  `vp`.`invoice_quantity` AS `invoice_quantity`,
+  `vp`.`invoice_bounce` AS `invoice_bounce`,
+  `vp`.`return_bounce` AS `return_bounce`,
+  `vp`.`invoice_bounce_net` AS `invoice_bounce_net`,
+  `vp`.`invoice_quantity_return` AS `invoice_quantity_return`,
+  `vp`.`invoice_net_q_withoutbounce` AS `invoice_net_q_withoutbounce`,
+  `vp`.`invoice_net_q` AS `invoice_net_q`,
+  `vp`.`get_quantity` AS `get_quantity`,
+  ((`vp`.`invoice_quantity` - `vp`.`invoice_quantity_return`) - `vp`.`get_quantity`) AS `get_quantity_next`,
+  FORMAT(`vp`.`get_required`, 2) AS `get_required`,
+  FORMAT(`vp`.`get_paid`, 2) AS `get_paid`,
+  FORMAT(`vp`.`get_next`, 2) AS `get_next`,
+  `vp`.`created_at` AS `created_at`,
+  `vp`.`updated_at` AS `updated_at`
+FROM (SELECT
+    `ip`.`id` AS `id`,
+    `ip`.`invoice_id` AS `invoice_id`,
+    `ip`.`product_id` AS `product_id`,
+    `ip`.`runID` AS `runID`,
+    `ip`.`invoice_public_price` AS `invoice_public_price`,
+    `ip`.`discount` AS `discount`,
+    `ip`.`invoice_quantity` AS `invoice_quantity`,
+    `ip`.`invoice_bounce` AS `invoice_bounce`,
+    SUM(IFNULL(`rp`.`return_bounce`, 0)) AS `return_bounce`,
+    (`ip`.`invoice_bounce` - SUM(IFNULL(`rp`.`return_bounce`, 0))) AS `invoice_bounce_net`,
+    SUM(IFNULL(`rp`.`return_quantity`, 0)) AS `invoice_quantity_return`,
+    (`ip`.`invoice_quantity` - SUM(IFNULL(`rp`.`return_quantity`, 0))) AS `invoice_net_q_withoutbounce`,
+    (((`ip`.`invoice_quantity` + `ip`.`invoice_bounce`) - SUM(IFNULL(`rp`.`return_bounce`, 0))) - SUM(IFNULL(`rp`.`return_quantity`, 0))) AS `invoice_net_q`,
+    SUM(IFNULL(`gp`.`get_quantity`, 0)) AS `get_quantity`,
+    ((`ip`.`invoice_quantity` - SUM(IFNULL(`rp`.`return_quantity`, 0))) * (((100 - `ip`.`discount`) / 100) * `ip`.`invoice_public_price`)) AS `get_required`,
+    (SUM(IFNULL(`gp`.`get_quantity`, 0)) * (((100 - `ip`.`discount`) / 100) * `ip`.`invoice_public_price`)) AS `get_paid`,
+    (((`ip`.`invoice_quantity` - SUM(IFNULL(`rp`.`return_quantity`, 0))) - SUM(IFNULL(`gp`.`get_quantity`, 0))) * (((100 - `ip`.`discount`) / 100) * `ip`.`invoice_public_price`)) AS `get_next`,
+    `ip`.`created_at` AS `created_at`,
+    `ip`.`updated_at` AS `updated_at`
+  FROM ((`marvel`.`invoice_product` `ip`
+    LEFT JOIN (SELECT
+        `gp`.`invoice_product_id` AS `invoice_product_id`,
+        SUM(`gp`.`get_quantity`) AS `get_quantity`
+      FROM `marvel`.`get_product` `gp`
+      GROUP BY `gp`.`invoice_product_id`) `gp`
+      ON ((`ip`.`id` = `gp`.`invoice_product_id`)))
+    LEFT JOIN (SELECT
+        `rp`.`invoice_product_id` AS `invoice_product_id`,
+        SUM(`rp`.`return_quantity`) AS `return_quantity`,
+        SUM(`rp`.`return_bounce`) AS `return_bounce`
+      FROM `marvel`.`return_products` `rp`
+      GROUP BY `rp`.`invoice_product_id`) `rp`
+      ON ((`ip`.`id` = `rp`.`invoice_product_id`)))
+  GROUP BY `ip`.`id`) `vp`

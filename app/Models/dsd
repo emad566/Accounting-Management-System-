@@ -1,0 +1,34 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use DB;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class ViewGetsReport  extends Model
+{
+
+    protected $table = 'view_gets_report ';
+    protected $fillable = [
+        'product_id', 
+        'Product_Name', 
+        'runID', 
+        'discount', 
+        'invoice_public_price', 
+        'invoice_product_id', 
+        'get_quantity', 
+        'get_date', 
+        'invoice_status_id', 
+        'client_pay_for_q', 
+        'state_id', 
+        'state', 
+        'city_id', 
+        'city', 
+        'vilage_id', 
+        'vilage'
+    ];
+}
+

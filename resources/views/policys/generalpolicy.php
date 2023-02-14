@@ -1,0 +1,14 @@
+CREATE TABLE generalpolicys (
+  id INT(3) NOT NULL AUTO_INCREMENT,
+  last_time TIME NOT NULL DEFAULT '09:00:00',
+  is_multi_due TINYINT(1) NOT NULL DEFAULT 0,
+  rep_limit DECIMAL(8, 2) NOT NULL DEFAULT 5000.00,
+  client_due_limit DECIMAL(8, 2) NOT NULL DEFAULT 10000.00,
+  paid_discount INT(2) NOT NULL DEFAULT 30,
+  due_discount INT(2) NOT NULL DEFAULT 25,
+  PRIMARY KEY (id)
+)
+ENGINE = INNODB,
+AUTO_INCREMENT = 2,
+CHARACTER SET utf8mb4,
+COLLATE utf8mb4_unicode_ci;
